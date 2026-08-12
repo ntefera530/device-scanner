@@ -1,4 +1,7 @@
 import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 interface ArpEntry {
     ip: string;
@@ -7,16 +10,29 @@ interface ArpEntry {
     connectionType: "WiFi" | "Ethernet" | "Unknown";
 }   
 
-exec("arp -a", (error, stdout, stderr) => {
-    if (error) {
-        console.error(`Error executing arp: ${error.message}`);
-        return;
+
+
+async function pingSweep(subnet: string): Promise<void> {
+    const pings: Promise<unknown>[] = [];
+
+    for(let i = 0; i <= 254; i++){
+        const ip = `${subnet}.${i}`;
+        pings.push(execAsync(`ping -c 1 -t 1 ${ip}`).catch(() => {
+
+        }));
     }
+    await Promise.all(pings);
+}
+
+
+async function scanNetwork(subnet: string): Promise<ArpEntry[]> {
+    await pingSweep(subnet);
+
+    const { stdout } = await execAsync("arp -a");
 
     const entries: ArpEntry[] = [];
     const regex  =/\(([\d.]+)\)\s+at\s+([0-9a-fA-F:]+).*?on\s+(\w+)/;
 
-    //console.log(`ARP Output:\n${stdout}`);
     for (const line of stdout.split("\n")) {
         const match = line.match(regex);
         if (match) {
@@ -30,13 +46,9 @@ exec("arp -a", (error, stdout, stderr) => {
         }
     }
 
-    //console.log("ARP Entries:", entries);
+    return dedupeEntries(entries.filter(isRealDevice));
 
-    const filteredEntries = dedupeEntries(entries.filter(isRealDevice));
-
-    console.log("Filtered ARP Entries:", filteredEntries);
-    
-});
+};
 
 
 function getConnectionType(iface: string): "WiFi" | "Ethernet" | "Unknown" {
@@ -85,3 +97,7 @@ function normalizeMac(mac: string): string {
         .join(":")
         .toLowerCase();
 }
+
+scanNetwork("10.0.0").then((devices) => {
+    console.log("Scanned devices:", devices);
+});
