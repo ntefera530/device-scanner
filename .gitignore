@@ -45,3 +45,6 @@ coverage/
 # --- Operating System Files ---
 .DS_Store
 Thumbs.db
+
+# --- config files ---
+src/devices.config.ts

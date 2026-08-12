@@ -1,16 +1,15 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 
+
 const execAsync = promisify(exec);
 
-interface ArpEntry {
+export interface ArpEntry {
     ip: string;
     mac: string;
     interface: string;   // raw value like "en0"
     connectionType: "WiFi" | "Ethernet" | "Unknown";
 }   
-
-
 
 async function pingSweep(subnet: string): Promise<void> {
     const pings: Promise<unknown>[] = [];
@@ -25,7 +24,7 @@ async function pingSweep(subnet: string): Promise<void> {
 }
 
 
-async function scanNetwork(subnet: string): Promise<ArpEntry[]> {
+export async function scanNetwork(subnet: string): Promise<ArpEntry[]> {
     await pingSweep(subnet);
 
     const { stdout } = await execAsync("arp -a");
@@ -90,14 +89,10 @@ function dedupeEntries(entries: ArpEntry[]): ArpEntry[] {
 }
 
 //Add padding and lowercase
-function normalizeMac(mac: string): string {
+export function normalizeMac(mac: string): string {
     return mac
         .split(":")
         .map((part) => part.padStart(2, "0"))
         .join(":")
         .toLowerCase();
 }
-
-scanNetwork("10.0.0").then((devices) => {
-    console.log("Scanned devices:", devices);
-});
