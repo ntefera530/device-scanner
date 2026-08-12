@@ -56,7 +56,7 @@ function isRealDevice(entry: ArpEntry): boolean {
     const firstOctet = parseInt(entry.ip.split(".")[0], 10);
     const lastOctet = parseInt(entry.ip.split(".")[3], 10);
 
-    if (firstOctet >= 224 && lastOctet <= 239) return false; // Multicast address
+    if (firstOctet >= 224 && firstOctet <= 239) return false; // Multicast address
     if (lastOctet ===  255) return false; // Broadcast address
     if (entry.mac.toLowerCase() === "ff:ff:ff:ff:ff:ff") return false; // Broadcast MAC
     if (entry.mac.toLowerCase() === "00:00:00:00:00:00") return false; // Invalid MAC
