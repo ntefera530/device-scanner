@@ -23,7 +23,7 @@ exec("arp -a", (error, stdout, stderr) => {
             const [, ip, mac, iface] = match;
             entries.push({
                 ip,
-                mac,
+                mac: normalizeMac(mac),
                 interface: iface,
                 connectionType: getConnectionType(iface),
             });
@@ -75,4 +75,13 @@ function dedupeEntries(entries: ArpEntry[]): ArpEntry[] {
     }
 
     return Array.from(seen.values());
+}
+
+//Add padding and lowercase
+function normalizeMac(mac: string): string {
+    return mac
+        .split(":")
+        .map((part) => part.padStart(2, "0"))
+        .join(":")
+        .toLowerCase();
 }
